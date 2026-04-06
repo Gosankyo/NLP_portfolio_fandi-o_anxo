@@ -18,12 +18,12 @@ if st.button("Analyze Review"):
     else:
         with st.spinner("The AI is thinking..."):
             try:
-                # Step 1: Prompt Engineering for Sentiment
+                # Step 1: Prompt Engineering for Sentiment 
                 prompt1 = f"Analyze the sentiment of this review. Answer ONLY with one word: 'Positive', 'Negative', 'Neutral', or 'Mixed'. If the review has both good and bad points, you MUST choose 'Mixed'. Review: '{review_text}'"
                 
                 response1 = ollama.chat(model='llama3.2', messages=[
                     {'role': 'user', 'content': prompt1}
-                ])
+                ], options={'temperature': 0}) 
                 sentiment = response1['message']['content']
 
                 # Step 2: Prompt Engineering for Key Points
@@ -31,7 +31,7 @@ if st.button("Analyze Review"):
                 
                 response2 = ollama.chat(model='llama3.2', messages=[
                     {'role': 'user', 'content': prompt2}
-                ])
+                ], options={'temperature': 0}) 
                 key_points = response2['message']['content']
 
                 # Postprocessing: Show the results nicely on the screen
