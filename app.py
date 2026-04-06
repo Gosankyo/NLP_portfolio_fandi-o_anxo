@@ -19,7 +19,7 @@ if st.button("Analyze Review"):
         with st.spinner("The AI is thinking..."):
             try:
                 # Step 1: Prompt Engineering for Sentiment 
-                prompt1 = f"Analyze the sentiment of this review. Answer ONLY with one word: 'Positive', 'Negative', 'Neutral', or 'Mixed'. If the review has both good and bad points, you MUST choose 'Mixed'. Review: '{review_text}'"
+                prompt1 = f"You are a sentiment analysis assistant. Classify the sentiment of the following review into exactly one of these four categories: 'Positive', 'Negative', 'Neutral', or 'Mixed'. Answer ONLY with the category word. Review: '{review_text}'"
                 
                 response1 = ollama.chat(model='llama3.2', messages=[
                     {'role': 'user', 'content': prompt1}
