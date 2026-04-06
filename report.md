@@ -14,7 +14,8 @@ The system uses a multi-step pipeline:
 ## 3. Model Selection and Justification
 I chose to use **Ollama** running locally on my machine. 
 * **Model:** Llama 3.2.
-* **Justification:** I selected this model because it is small and fast. It runs very well on a personal computer without needing an expensive cloud server. It is also very smart for instruction-following tasks like sentiment analysis.
+* **Configuration:** I set the model's **temperature to 0**.
+* **Justification:** I selected this model because it is small and fast. It runs very well on a personal computer without needing an expensive cloud server. I changed the temperature to 0 because sentiment analysis needs precise and logical answers, not creative ones. This makes the AI more reliable for this specific task.
 
 ## 4. Implementation Details
 * **Language:** Python
