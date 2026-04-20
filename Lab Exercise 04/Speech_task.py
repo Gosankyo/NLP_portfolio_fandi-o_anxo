@@ -135,3 +135,75 @@ def create_demo_video(output_dir: str) -> str:
         "local_tts": out_dir / "local_tts.wav",
         "external_tts": out_dir / "external_tts.wav",
     }
+     # create audio files for the demo
+    beep_tts("hello world", str(audio_assets["template"]))
+    beep_tts("hello world", str(audio_assets["test_input"]))
+    beep_tts("this is local t t s", str(audio_assets["local_tts"]))
+    external_tts("this is external t t s", str(audio_assets["external_tts"]))
+
+    recogniser = TemplateSpeechRecognizer(threshold=0.7)
+    recogniser.add_template("hello world", str(audio_assets["template"]))
+    recog = recogniser.recognise(str(audio_assets["test_input"])) or "unrecognised"
+    ext_transcript = external_stt(str(audio_assets["test_input"]))
+
+    durations = {k: get_audio_duration(str(v)) for k, v in audio_assets.items()}
+
+    def make_slide(text: str, duration: float, filename: str) -> Path:
+        width, height = 640, 480
+        fps = 24
+        total_frames = int(round(duration * fps)) or 1
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+
+        lines: list[str] = []
+        words = text.split()
+        line = ""
+        for word in words:
+            if len(line) + len(word) + 1 > 35:
+                lines.append(line)
+                line = word
+            else:
+                line = f"{line} {word}".strip()
+        if line:
+            lines.append(line)
+
+        y_offset = 200 - 20 * (len(lines) - 1)
+        for i, l in enumerate(lines):
+            cv2.putText(
+                frame,
+                l,
+                (40, y_offset + i * 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (255, 255, 255),
+                2,
+                cv2.LINE_AA,
+            )
+
+        temp_video_path = out_dir / filename
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        writer = cv2.VideoWriter(str(temp_video_path), fourcc, fps, (width, height))
+        for _ in range(total_frames):
+            writer.write(frame)
+        writer.release()
+        return temp_video_path
+
+    slides: list[tuple[Path, str, float]] = []
+    slides.append((make_slide("Intro: local TTS and STT demo.", durations["local_tts"], "intro.mp4"), str(audio_assets["local_tts"]), durations["local_tts"]))
+    slides.append((make_slide("Local TTS: generated beeps.", durations["local_tts"], "local_tts.mp4"), str(audio_assets["local_tts"]), durations["local_tts"]))
+    slides.append((make_slide("External TTS: remote API fallback.", durations["external_tts"], "external_tts.mp4"), str(audio_assets["external_tts"]), durations["external_tts"]))
+    slides.append((make_slide(f"Local STT result: '{recog}'.", durations["test_input"], "local_stt.mp4"), str(audio_assets["test_input"]), durations["test_input"]))
+    slides.append((make_slide(f"External STT result: {ext_transcript}", 4.0, "external_stt.mp4"), str(audio_assets["template"]), 4.0))
+    slides.append((make_slide(f"Duration: {durations['template']:.2f} sec.", durations["template"], "duration.mp4"), str(audio_assets["template"]), durations["template"]))
+
+    clips = []
+    for vid_path, aud_path, _ in slides:
+        clip = VideoFileClip(str(vid_path)).with_audio(AudioFileClip(aud_path))
+        clips.append(clip)
+
+    final_clip = concatenate_videoclips(clips, method="compose")
+    out_video_path = out_dir / "speech_demo.mp4"
+    final_clip.write_videofile(str(out_video_path), fps=24)
+    for clip in clips:
+        clip.close()
+    final_clip.close()
+    return str(out_video_path)
