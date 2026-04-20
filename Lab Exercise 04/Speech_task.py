@@ -24,3 +24,19 @@ def beep_tts(text: str, output_file: str, sample_rate: int = 44100) -> float:
         else:
             tone = np.zeros_like(t)
         audio = np.concatenate((audio, tone))
+
+# normalise to int16 range
+    if np.max(np.abs(audio)) > 0:
+        audio_int16 = (audio / np.max(np.abs(audio)) * 32767).astype(np.int16)
+    else:
+        audio_int16 = np.int16(audio)
+
+    out_path = Path(output_file)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(out_path), 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio_int16.tobytes())
+
+    return len(audio_int16) / sample_rate
